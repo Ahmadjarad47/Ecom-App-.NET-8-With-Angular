@@ -23,8 +23,9 @@ namespace Ecom.infrastructure.Repositries
             await _context.SaveChangesAsync();
         }
 
-        public async Task DeleteAsync(T entity)
+        public async Task DeleteAsync(int id)
         {
+            var entity = await _context.Set<T>().FindAsync(id);
             _context.Set<T>().Remove(entity);
             await _context.SaveChangesAsync();
         }
@@ -32,7 +33,7 @@ namespace Ecom.infrastructure.Repositries
         public async Task<IReadOnlyList<T>> GetAllAsync()
         => await _context.Set<T>().AsNoTracking().ToListAsync();
 
-        public async Task<IReadOnlyList<T>> GetAllAsync(params Expression<Func<T, bool>>[] Includes)
+        public async Task<IReadOnlyList<T>> GetAllAsync(params Expression<Func<T, object>>[] Includes)
         {
             var query = _context.Set<T>().AsQueryable();
 
@@ -42,6 +43,27 @@ namespace Ecom.infrastructure.Repositries
                 query = query.Include(item);
             }
             return await query.ToListAsync();
+        }
+        public async Task<T> GetByIdAsync(int id, params Expression<Func<T, object>>[] includes)
+        {
+            IQueryable<T> query = _context.Set<T>();
+
+            // Apply includes
+            foreach (var include in includes)
+            {
+                query = query.Include(include);
+            }
+
+            // Filter by Id
+            var entity = await query.FirstOrDefaultAsync(x => EF.Property<int>(x, "Id") == id);
+            return entity;
+        }
+
+
+        public async Task<T> GetByIdAsync(int id)
+        {
+            var entity = await _context.Set<T>().FindAsync(id);
+            return entity;
         }
 
         public async Task UpdateAsync(T entity)
