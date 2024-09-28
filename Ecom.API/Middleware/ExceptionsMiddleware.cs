@@ -23,7 +23,6 @@ namespace Ecom.API.Middleware
             {
                 ApplySecurity(context);
 
-
                 if (IsRequestAllowed(context) == false)
                 {
                     context.Response.StatusCode = (int)HttpStatusCode.TooManyRequests;
@@ -64,7 +63,7 @@ namespace Ecom.API.Middleware
 
             if (dateNow - timesTamp < _rateLimitWindow)
             {
-                if (count >= 8)
+                if (count >= 80)
                 {
                     return false;
                 }

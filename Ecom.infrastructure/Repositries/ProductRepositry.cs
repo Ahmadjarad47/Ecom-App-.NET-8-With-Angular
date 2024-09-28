@@ -3,6 +3,7 @@ using Ecom.Core.DTO;
 using Ecom.Core.Entities.Product;
 using Ecom.Core.interfaces;
 using Ecom.Core.Services;
+using Ecom.Core.Sharing;
 using Ecom.infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -10,7 +11,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using static System.Net.Mime.MediaTypeNames;
+
 
 namespace Ecom.infrastructure.Repositries
 {
@@ -25,7 +26,53 @@ namespace Ecom.infrastructure.Repositries
             this.mapper = mapper;
             this.imageManagementService = imageManagementService;
         }
+        public async Task<IEnumerable<ProductDTO>> GetAllAsync(ProductParams productParams)
+        {
+            var query = context.Products
+                .Include(m => m.Category)
+                .Include(m => m.Photos)
+                .AsNoTracking();
 
+
+
+            //filtering by word
+            if (!string.IsNullOrEmpty(productParams.Search))
+            {
+                var searchWords = productParams.Search.Split(' ');
+                query = query.Where(m => searchWords.All(word =>
+
+                m.Name.ToLower().Contains(word.ToLower()) ||
+                m.Description.ToLower().Contains(word.ToLower())
+
+                ));
+            }
+
+
+
+            //filtering by category Id
+            if (productParams.CategoryId.HasValue)
+                query = query.Where(m => m.CategoryId == productParams.CategoryId);
+
+            if (!string.IsNullOrEmpty(productParams.Sort))
+            {
+                query = productParams.Sort switch
+                {
+                    "PriceAce" => query.OrderBy(m => m.NewPrice),
+                    "PriceDce" => query.OrderByDescending(m => m.NewPrice),
+                    _ => query.OrderBy(m => m.Name),
+                };
+            }
+
+            productParams.TotatlCount = query.Count();
+
+            query = query.Skip((productParams.pageSize) * (productParams.PageNumber - 1)).Take(productParams.pageSize);
+
+
+            var result = mapper.Map<List<ProductDTO>>(query);
+
+            return result;
+
+        }
         public async Task<bool> AddAsync(AddProductDTO productDTO)
         {
             if (productDTO == null) return false;
@@ -86,6 +133,7 @@ namespace Ecom.infrastructure.Repositries
             return true;
 
         }
+
         public async Task DeleteAsync(Product product)
         {
             var photo = await context.Photos.Where(m => m.ProductId == product.Id)
