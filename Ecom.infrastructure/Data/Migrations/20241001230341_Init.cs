@@ -3,10 +3,12 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
+#pragma warning disable CA1814 // Prefer jagged arrays over multidimensional
+
 namespace Ecom.infrastructure.Data.Migrations
 {
     /// <inheritdoc />
-    public partial class Add_Identity_Tables : Migration
+    public partial class Init : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -49,6 +51,36 @@ namespace Ecom.infrastructure.Data.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_AspNetUsers", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Categories",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Name = table.Column<string>(type: "nvarchar(30)", maxLength: 30, nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Categories", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "DeliveryMethods",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Price = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    DeliveryTime = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_DeliveryMethods", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -181,6 +213,126 @@ namespace Ecom.infrastructure.Data.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "Products",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    NewPrice = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    OldPrice = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    CategoryId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Products", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Products_Categories_CategoryId",
+                        column: x => x.CategoryId,
+                        principalTable: "Categories",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Orders",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    BuyerEmail = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    SubTotal = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    OrderDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    shippingAddress_FirstName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    shippingAddress_LastName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    shippingAddress_City = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    shippingAddress_ZipCode = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    shippingAddress_Street = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    shippingAddress_State = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    shippingAddress_Id = table.Column<int>(type: "int", nullable: true),
+                    deliveryMethodId = table.Column<int>(type: "int", nullable: true),
+                    status = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Orders", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Orders_DeliveryMethods_deliveryMethodId",
+                        column: x => x.deliveryMethodId,
+                        principalTable: "DeliveryMethods",
+                        principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Photos",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ImageName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ProductId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Photos", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Photos_Products_ProductId",
+                        column: x => x.ProductId,
+                        principalTable: "Products",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "OrderItems",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ProductItemId = table.Column<int>(type: "int", nullable: false),
+                    MainImage = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ProductName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Price = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    Quntity = table.Column<int>(type: "int", nullable: false),
+                    OrdersId = table.Column<int>(type: "int", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_OrderItems", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_OrderItems_Orders_OrdersId",
+                        column: x => x.OrdersId,
+                        principalTable: "Orders",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.InsertData(
+                table: "Categories",
+                columns: new[] { "Id", "Description", "Name" },
+                values: new object[] { 1, "test", "test" });
+
+            migrationBuilder.InsertData(
+                table: "DeliveryMethods",
+                columns: new[] { "Id", "DeliveryTime", "Description", "Name", "Price" },
+                values: new object[,]
+                {
+                    { 1, "Only a week", "The fast Delivery in the world", "DHL", 15m },
+                    { 2, "Only take two week", "Make your product save", "XXX", 12m }
+                });
+
+            migrationBuilder.InsertData(
+                table: "Products",
+                columns: new[] { "Id", "CategoryId", "Description", "Name", "NewPrice", "OldPrice" },
+                values: new object[] { 1, 1, "test", "test", 12m, 0m });
+
+            migrationBuilder.InsertData(
+                table: "Photos",
+                columns: new[] { "Id", "ImageName", "ProductId" },
+                values: new object[] { 3, "test", 1 });
+
             migrationBuilder.CreateIndex(
                 name: "IX_Addresses_AppUserId",
                 table: "Addresses",
@@ -226,6 +378,26 @@ namespace Ecom.infrastructure.Data.Migrations
                 column: "NormalizedUserName",
                 unique: true,
                 filter: "[NormalizedUserName] IS NOT NULL");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_OrderItems_OrdersId",
+                table: "OrderItems",
+                column: "OrdersId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Orders_deliveryMethodId",
+                table: "Orders",
+                column: "deliveryMethodId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Photos_ProductId",
+                table: "Photos",
+                column: "ProductId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Products_CategoryId",
+                table: "Products",
+                column: "CategoryId");
         }
 
         /// <inheritdoc />
@@ -250,10 +422,28 @@ namespace Ecom.infrastructure.Data.Migrations
                 name: "AspNetUserTokens");
 
             migrationBuilder.DropTable(
+                name: "OrderItems");
+
+            migrationBuilder.DropTable(
+                name: "Photos");
+
+            migrationBuilder.DropTable(
                 name: "AspNetRoles");
 
             migrationBuilder.DropTable(
                 name: "AspNetUsers");
+
+            migrationBuilder.DropTable(
+                name: "Orders");
+
+            migrationBuilder.DropTable(
+                name: "Products");
+
+            migrationBuilder.DropTable(
+                name: "DeliveryMethods");
+
+            migrationBuilder.DropTable(
+                name: "Categories");
         }
     }
 }

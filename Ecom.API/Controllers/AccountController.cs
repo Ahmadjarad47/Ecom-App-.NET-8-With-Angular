@@ -2,6 +2,7 @@
 using Ecom.API.Helper;
 using Ecom.Core.DTO;
 using Ecom.Core.interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -13,6 +14,7 @@ namespace Ecom.API.Controllers
         public AccountController(IUnitOfWork work, IMapper mapper) : base(work, mapper)
         {
         }
+
         [HttpPost("Register")]
         public async Task<ActionResult<RegisterDTO>> register(RegisterDTO registerDTO)
         {
@@ -36,12 +38,12 @@ namespace Ecom.API.Controllers
 
             Response.Cookies.Append("token", result, new CookieOptions
             {
-                Secure = true,
                 HttpOnly = true,
-                Domain = "localhost",
-                Expires = DateTime.Now.AddDays(1),
+                Secure = true, // Set to true if running on HTTPS
+                SameSite = SameSiteMode.Lax, // Consider using Lax or None
                 IsEssential = true,
-                SameSite = SameSiteMode.Strict,
+                //Domain = "localhost", // Only the domain name
+                Expires = DateTime.Now.AddDays(10000)
             });
             return Ok(new ResponseAPI(200));
         }

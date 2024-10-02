@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Ecom.infrastructure.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20240922180151_Add_Identity_Tables")]
-    partial class Add_Identity_Tables
+    [Migration("20241001230341_Init")]
+    partial class Init
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -129,6 +129,113 @@ namespace Ecom.infrastructure.Data.Migrations
                         .HasFilter("[NormalizedUserName] IS NOT NULL");
 
                     b.ToTable("AspNetUsers", (string)null);
+                });
+
+            modelBuilder.Entity("Ecom.Core.Entities.Order.DeliveryMethod", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("DeliveryTime")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("Price")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("DeliveryMethods");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            DeliveryTime = "Only a week",
+                            Description = "The fast Delivery in the world",
+                            Name = "DHL",
+                            Price = 15m
+                        },
+                        new
+                        {
+                            Id = 2,
+                            DeliveryTime = "Only take two week",
+                            Description = "Make your product save",
+                            Name = "XXX",
+                            Price = 12m
+                        });
+                });
+
+            modelBuilder.Entity("Ecom.Core.Entities.Order.OrderItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("MainImage")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("OrdersId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("Price")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("ProductItemId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ProductName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Quntity")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrdersId");
+
+                    b.ToTable("OrderItems");
+                });
+
+            modelBuilder.Entity("Ecom.Core.Entities.Order.Orders", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("BuyerEmail")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("OrderDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("SubTotal")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int?>("deliveryMethodId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("deliveryMethodId");
+
+                    b.ToTable("Orders");
                 });
 
             modelBuilder.Entity("Ecom.Core.Entities.Product.Category", b =>
@@ -374,6 +481,59 @@ namespace Ecom.infrastructure.Data.Migrations
                     b.Navigation("AppUser");
                 });
 
+            modelBuilder.Entity("Ecom.Core.Entities.Order.OrderItem", b =>
+                {
+                    b.HasOne("Ecom.Core.Entities.Order.Orders", null)
+                        .WithMany("orderItems")
+                        .HasForeignKey("OrdersId")
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("Ecom.Core.Entities.Order.Orders", b =>
+                {
+                    b.HasOne("Ecom.Core.Entities.Order.DeliveryMethod", "deliveryMethod")
+                        .WithMany()
+                        .HasForeignKey("deliveryMethodId");
+
+                    b.OwnsOne("Ecom.Core.Entities.Order.ShippingAddress", "shippingAddress", b1 =>
+                        {
+                            b1.Property<int>("OrdersId")
+                                .HasColumnType("int");
+
+                            b1.Property<string>("City")
+                                .HasColumnType("nvarchar(max)");
+
+                            b1.Property<string>("FirstName")
+                                .HasColumnType("nvarchar(max)");
+
+                            b1.Property<int>("Id")
+                                .HasColumnType("int");
+
+                            b1.Property<string>("LastName")
+                                .HasColumnType("nvarchar(max)");
+
+                            b1.Property<string>("State")
+                                .HasColumnType("nvarchar(max)");
+
+                            b1.Property<string>("Street")
+                                .HasColumnType("nvarchar(max)");
+
+                            b1.Property<string>("ZipCode")
+                                .HasColumnType("nvarchar(max)");
+
+                            b1.HasKey("OrdersId");
+
+                            b1.ToTable("Orders");
+
+                            b1.WithOwner()
+                                .HasForeignKey("OrdersId");
+                        });
+
+                    b.Navigation("deliveryMethod");
+
+                    b.Navigation("shippingAddress");
+                });
+
             modelBuilder.Entity("Ecom.Core.Entities.Product.Photo", b =>
                 {
                     b.HasOne("Ecom.Core.Entities.Product.Product", null)
@@ -448,6 +608,11 @@ namespace Ecom.infrastructure.Data.Migrations
             modelBuilder.Entity("Ecom.Core.Entities.AppUser", b =>
                 {
                     b.Navigation("Address");
+                });
+
+            modelBuilder.Entity("Ecom.Core.Entities.Order.Orders", b =>
+                {
+                    b.Navigation("orderItems");
                 });
 
             modelBuilder.Entity("Ecom.Core.Entities.Product.Product", b =>

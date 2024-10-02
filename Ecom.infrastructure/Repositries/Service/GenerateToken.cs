@@ -1,14 +1,15 @@
 ﻿using Ecom.Core.Entities;
 using Ecom.Core.Services;
-using Microsoft.Extensions.Configuration;
-using Microsoft.IdentityModel.Tokens;
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Security.Claims;
+using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
+using Microsoft.Extensions.Configuration;
 namespace Ecom.infrastructure.Repositries.Service
 {
     public class GenerateToken : IGenerateToken
@@ -21,28 +22,40 @@ namespace Ecom.infrastructure.Repositries.Service
         public string GetAndCreateToken(AppUser user)
         {
 
-            List<Claim> claims = new List<Claim>()
+            List<Claim> claims = new List<Claim>
+    {
+        new Claim(ClaimTypes.Email, user.Email),
+        new Claim(ClaimTypes.Name, user.UserName),
+    };
+
+            string secret = configuration["Token:Secret"];
+            if (string.IsNullOrEmpty(secret))
             {
-                new Claim(ClaimTypes.Name,user.UserName),
-                 new Claim(ClaimTypes.Email,user.Email),
-            };
-            var Security = configuration["Token:Secret"];
-            var key = Encoding.ASCII.GetBytes(Security);
+                throw new ArgumentNullException("Token secret is not configured");
+            }
 
-            SigningCredentials credentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256);
+            byte[] key = Encoding.ASCII.GetBytes(secret);
+            SigningCredentials credentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature);
 
-            SecurityTokenDescriptor tokenDescriptor = new()
+            SecurityTokenDescriptor tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(claims),
-                Expires = DateTime.Now.AddDays(1),
-                Issuer = configuration["Token:Issure"],
+                Expires = DateTime.Now.AddHours(30), // Adjust token expiration time as needed
+                Issuer = configuration["Token:Issuer"],
                 SigningCredentials = credentials,
-                NotBefore = DateTime.Now,
-
+                NotBefore = DateTime.UtcNow
             };
-            JwtSecurityTokenHandler handler = new JwtSecurityTokenHandler();
-            var token = handler.CreateToken(tokenDescriptor);
-            return handler.WriteToken(token);
+
+            JwtSecurityTokenHandler tokenHandler = new JwtSecurityTokenHandler();
+            SecurityToken token = tokenHandler.CreateToken(tokenDescriptor);
+
+            string tokenString = tokenHandler.WriteToken(token);
+
+            // Log the token to ensure it looks correct
+            Console.WriteLine("Generated JWT: " + tokenString);
+
+            return tokenString;
         }
+
     }
 }
