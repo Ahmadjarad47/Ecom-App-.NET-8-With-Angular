@@ -4,6 +4,7 @@ using Ecom.Core.Services;
 using Ecom.infrastructure.Data;
 using Ecom.infrastructure.Repositries;
 using Ecom.infrastructure.Repositries.Service;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
@@ -31,7 +32,9 @@ public static class infrastructureRegisteration
         //register email sender
         services.AddScoped<IEmailService, EmailService>();
 
+        //register IOrder Service
         services.AddScoped<IOrderService, OrderService>();
+
         //register token
         services.AddScoped<IGenerateToken, GenerateToken>();
         //apply Redis Connectoon
@@ -53,7 +56,7 @@ public static class infrastructureRegisteration
         {
             x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
             x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-
+            x.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
         })
         .AddCookie(x =>
         {

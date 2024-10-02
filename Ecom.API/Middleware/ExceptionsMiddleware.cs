@@ -21,7 +21,7 @@ namespace Ecom.API.Middleware
         {
             try
             {
-                //ApplySecurity(context);
+                ApplySecurity(context);
 
                 if (IsRequestAllowed(context) == false)
                 {
