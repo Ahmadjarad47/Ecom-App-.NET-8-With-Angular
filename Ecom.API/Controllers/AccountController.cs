@@ -1,10 +1,13 @@
 ﻿using AutoMapper;
 using Ecom.API.Helper;
 using Ecom.Core.DTO;
+using Ecom.Core.Entities;
 using Ecom.Core.interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace Ecom.API.Controllers
 {
@@ -13,6 +16,30 @@ namespace Ecom.API.Controllers
     {
         public AccountController(IUnitOfWork work, IMapper mapper) : base(work, mapper)
         {
+        }
+        [HttpGet("get-address-for-user")]
+        public async Task<IActionResult> getAddress()
+        {
+            var address = await work.Auth.getUserAddress(User.FindFirst(ClaimTypes.Email).Value);
+            var result = mapper.Map<ShipAddressDTO>(address);
+            return Ok(result);
+        }
+
+        [HttpGet("IsUserAuth")]
+        public async Task<IActionResult> IsUserAuth()
+        {
+
+            return User.Identity.IsAuthenticated ? Ok() : BadRequest();
+        }
+
+        [Authorize]
+        [HttpPut("update-address")]
+        public async Task<IActionResult> updateAddress(ShipAddressDTO addressDTO)
+        {
+            var email = User.FindFirst(ClaimTypes.Email)?.Value;
+            var address = mapper.Map<Address>(addressDTO);
+            var result = await work.Auth.UpdateAddress(email, address);
+            return result ? Ok() : BadRequest();
         }
 
         [HttpPost("Register")]
@@ -40,9 +67,9 @@ namespace Ecom.API.Controllers
             {
                 HttpOnly = true,
                 Secure = true, // Set to true if running on HTTPS
-                SameSite = SameSiteMode.Lax, // Consider using Lax or None
+                SameSite = SameSiteMode.None, // Consider using Lax or None
                 IsEssential = true,
-                //Domain = "localhost", // Only the domain name
+                Domain = "localhost", // Only the domain name
                 Expires = DateTime.Now.AddDays(10000)
             });
             return Ok(new ResponseAPI(200));

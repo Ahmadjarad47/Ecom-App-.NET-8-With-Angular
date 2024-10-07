@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Ecom.Core.DTO;
+using Ecom.Core.Entities;
 using Ecom.Core.Entities.Order;
 
 namespace Ecom.API.Mapping
@@ -16,6 +17,7 @@ namespace Ecom.API.Mapping
 
             CreateMap<OrderItem, OrderItemDTO>().ReverseMap();
             CreateMap<ShippingAddress, ShipAddressDTO>().ReverseMap();
+            CreateMap<Address, ShipAddressDTO>().ReverseMap();
         }
     }
 }

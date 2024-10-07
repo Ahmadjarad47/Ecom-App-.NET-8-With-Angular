@@ -1,4 +1,5 @@
 ﻿using Ecom.Core.DTO;
+using Ecom.Core.Entities.Order;
 using Ecom.Core.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -22,14 +23,14 @@ namespace Ecom.API.Controllers
         {
             var email = User.FindFirst(ClaimTypes.Email)?.Value;
 
-            var order = await _orderService.CreateOrdersAsync(orderDTO, email);
+            Orders order = await _orderService.CreateOrdersAsync(orderDTO, email);
 
             return Ok(order);
         }
 
 
         [HttpGet("get-orders-for-user")]
-        public async Task<IActionResult> getorders()
+        public async Task<ActionResult<IReadOnlyList<OrderToReturnDTO>>> getorders()
         {
             var email = User.FindFirst(ClaimTypes.Email)?.Value;
             var order = await _orderService.GetAllOrdersForUserAsync(email);
@@ -38,7 +39,7 @@ namespace Ecom.API.Controllers
 
 
         [HttpGet("get-order-by-id/{id}")]
-        public async Task<IActionResult> getOrderById(int id)
+        public async Task<ActionResult<OrderToReturnDTO>> getOrderById(int id)
         {
             var email = User.FindFirst(ClaimTypes.Email)?.Value;
             var order = await _orderService.GetOrderByIdAsync(id, email);
@@ -47,7 +48,7 @@ namespace Ecom.API.Controllers
 
 
         [HttpGet("get-delivery")]
-        public async Task<IActionResult> GetDeliver()
+        public async Task<ActionResult> GetDeliver()
         => Ok(await _orderService.GetDeliveryMethodAsync());
     }
 }

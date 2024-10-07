@@ -3,7 +3,9 @@ using Ecom.Core.Entities;
 using Ecom.Core.interfaces;
 using Ecom.Core.Services;
 using Ecom.Core.Sharing;
+using Ecom.infrastructure.Data;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,12 +20,14 @@ namespace Ecom.infrastructure.Repositries
         private readonly IEmailService emailService;
         private readonly SignInManager<AppUser> signInManager;
         private readonly IGenerateToken generateToken;
-        public AuthRepositry(UserManager<AppUser> userManager, IEmailService emailService, SignInManager<AppUser> signInManager, IGenerateToken generateToken)
+        private readonly AppDbContext context;
+        public AuthRepositry(UserManager<AppUser> userManager, IEmailService emailService, SignInManager<AppUser> signInManager, IGenerateToken generateToken, AppDbContext context)
         {
             this.userManager = userManager;
             this.emailService = emailService;
             this.signInManager = signInManager;
             this.generateToken = generateToken;
+            this.context = context;
         }
         public async Task<string> RegisterAsync(RegisterDTO registerDTO)
         {
@@ -148,6 +152,38 @@ namespace Ecom.infrastructure.Repositries
             await SendEmail(findUser.Email, token, "active", "ActiveEmail", "Please active your email, click on button to active");
 
             return false;
+        }
+
+        public async Task<bool> UpdateAddress(string email, Address address)
+        {
+            var findUser = await userManager.FindByEmailAsync(email);
+            if (findUser is null)
+            {
+                return false;
+            }
+            var Myaddress = await context.Addresses.FirstOrDefaultAsync(m => m.AppUserId == findUser.Id);
+
+            if (Myaddress is null)
+            {
+                address.AppUserId = findUser.Id;
+                await context.Addresses.AddAsync(address);
+            }
+            else
+            {
+                address.Id = Myaddress.Id;
+                context.Addresses.Update(address);
+
+            }
+            await context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<Address> getUserAddress(string email)
+        {
+            var User = await userManager.FindByEmailAsync(email);
+            var address = await context.Addresses.FirstOrDefaultAsync(m => m.AppUserId == User.Id);
+
+            return address;
         }
     }
 }
