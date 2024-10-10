@@ -37,6 +37,11 @@ public static class infrastructureRegisteration
 
         //register token
         services.AddScoped<IGenerateToken, GenerateToken>();
+
+        //register payment service
+        services.AddScoped<IPaymentService, PaymentService>();
+
+
         //apply Redis Connectoon
         services.AddSingleton<IConnectionMultiplexer>(i =>
         {

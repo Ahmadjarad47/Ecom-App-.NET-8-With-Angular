@@ -161,7 +161,8 @@ namespace Ecom.infrastructure.Repositries
             {
                 return false;
             }
-            var Myaddress = await context.Addresses.FirstOrDefaultAsync(m => m.AppUserId == findUser.Id);
+            var Myaddress = await context.Addresses.AsNoTracking()
+                .FirstOrDefaultAsync(m => m.AppUserId == findUser.Id);
 
             if (Myaddress is null)
             {
@@ -170,7 +171,9 @@ namespace Ecom.infrastructure.Repositries
             }
             else
             {
+                context.Entry(Myaddress).State = EntityState.Detached;
                 address.Id = Myaddress.Id;
+                address.AppUserId = Myaddress.AppUserId;
                 context.Addresses.Update(address);
 
             }

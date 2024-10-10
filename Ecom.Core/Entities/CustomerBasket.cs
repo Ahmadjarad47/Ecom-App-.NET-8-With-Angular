@@ -17,6 +17,9 @@ namespace Ecom.Core.Entities
             Id = id;
         }
         public string Id { get; set; } //key
+
+        public string PaymentIntentId { get; set; }
+        public string ClientSecret { get; set; }
         public List<BasketItem> basketItems { get; set; } = new List<BasketItem>(); //value
     }
 }

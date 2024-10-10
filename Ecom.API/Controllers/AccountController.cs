@@ -25,6 +25,29 @@ namespace Ecom.API.Controllers
             return Ok(result);
         }
 
+        [HttpGet("Logout")]
+        public void logout()
+        {
+
+            Response.Cookies.Append("token", "", new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.None,
+                IsEssential = true,
+                Domain = "localhost",
+                Expires = DateTime.Now.AddDays(-1)
+            });
+        }
+
+        [Authorize]
+        [HttpGet("get-user-name")]
+        public IActionResult GetUserName()
+        {
+            return Ok(new ResponseAPI(200, User.Identity.Name));
+        }
+
+
         [HttpGet("IsUserAuth")]
         public async Task<IActionResult> IsUserAuth()
         {
@@ -66,11 +89,11 @@ namespace Ecom.API.Controllers
             Response.Cookies.Append("token", result, new CookieOptions
             {
                 HttpOnly = true,
-                Secure = true, // Set to true if running on HTTPS
-                SameSite = SameSiteMode.None, // Consider using Lax or None
+                Secure = true,
+                SameSite = SameSiteMode.None,
                 IsEssential = true,
-                Domain = "localhost", // Only the domain name
-                Expires = DateTime.Now.AddDays(10000)
+                Domain = "localhost",
+                Expires = DateTime.Now.AddDays(1)
             });
             return Ok(new ResponseAPI(200));
         }

@@ -18,11 +18,14 @@ namespace Ecom.infrastructure.Repositries.Service
         private readonly IUnitOfWork _unitOfWork;
         private readonly AppDbContext _context;
         private readonly IMapper _mapper;
-        public OrderService(IUnitOfWork unitOfWork, AppDbContext context, IMapper mapper)
+        private readonly IPaymentService _paymentService;
+
+        public OrderService(IUnitOfWork unitOfWork, AppDbContext context, IMapper mapper, IPaymentService paymentService)
         {
             _unitOfWork = unitOfWork;
             _context = context;
             _mapper = mapper;
+            _paymentService = paymentService;
         }
         public async Task<Orders> CreateOrdersAsync(OrderDTO orderDTO, string BuyerEmail)
         {
@@ -44,7 +47,16 @@ namespace Ecom.infrastructure.Repositries.Service
 
             var ship = _mapper.Map<ShippingAddress>(orderDTO.shipAddress);
 
-            var order = new Orders(BuyerEmail, subTotal, ship, deliverMethod, orderItems);
+            var ExisitOrder = await _context.Orders.Where(m => m.PaymentIntentId == basket.PaymentIntentId).FirstOrDefaultAsync();
+
+            if (ExisitOrder is not null)
+            {
+                _context.Orders.Remove(ExisitOrder);
+                await _paymentService.CreateOrUpdatePaymentAsync(basket.PaymentIntentId, deliverMethod.Id);
+            }
+
+            var order = new
+                Orders(BuyerEmail, subTotal, ship, deliverMethod, orderItems, basket.PaymentIntentId);
 
             await _context.Orders.AddAsync(order);
             await _context.SaveChangesAsync();
@@ -59,6 +71,7 @@ namespace Ecom.infrastructure.Repositries.Service
                 .Include(inc => inc.orderItems).Include(inc => inc.deliveryMethod)
                 .ToListAsync();
             var result = _mapper.Map<IReadOnlyList<OrderToReturnDTO>>(orders);
+            result = result.OrderByDescending(m => m.Id).ToList();
             return result;
         }
 
