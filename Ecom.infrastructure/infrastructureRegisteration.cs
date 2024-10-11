@@ -35,6 +35,7 @@ public static class infrastructureRegisteration
         //register IOrder Service
         services.AddScoped<IOrderService, OrderService>();
 
+        services.AddScoped<IRating, RatingRepositry>();
         //register token
         services.AddScoped<IGenerateToken, GenerateToken>();
 

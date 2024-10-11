@@ -18,6 +18,7 @@ namespace Ecom.Core.DTO
         public decimal OldPrice { get; set; }
         public virtual List<PhotoDTO> Photos { get; set; }
         public string CategoryName { get; set; }
+        public double rating { get; set; }
 
     }
     public record PhotoDTO

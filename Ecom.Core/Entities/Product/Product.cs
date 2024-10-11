@@ -18,5 +18,7 @@ namespace Ecom.Core.Entities.Product
         public int CategoryId { get; set; }
         [ForeignKey(nameof(CategoryId))]
         public virtual Category Category { get; set; }
+
+        public double rating { get; set; }
     }
 }
